@@ -145,7 +145,7 @@ bool Pipeline::run() {
         processing_thread_ = std::thread(&Pipeline::processingLoop, this);
 
         while (!stop_requested_) {
-            if (config_.pipeline_.visualize && async_viewer) {
+            if (config_.pipeline_.visualize && async_viewer && !stop_requested_) {
                 if (!async_viewer->spin_once()) {
                     stop_requested_ = true;
                     break;
@@ -192,15 +192,17 @@ void Pipeline::processingLoop() {
             timer_.lap();
             current_processing_time_ = timer_.msec();
             progress_ = static_cast<float>(++frame_count_) / scan_files_.size();
-
-            // std::cout << "Frame processing time [ms]: " << current_processing_time_ << std::endl;
         }
 
         writeResults();
+        stop_requested_ = true;   //
+        pause_cv_.notify_all();
 
     } catch (const std::exception &e) {
         std::cerr << "Processing error: " << e.what() << std::endl;
         stop_requested_ = true;
+        pause_cv_.notify_all();
+
     }
 }
 
@@ -315,6 +317,9 @@ Vector7d Pipeline::predictNextPose() {
 
 void Pipeline::updateVisualization(const small_gicp::PointCloud::Ptr &cloud) {
     std::lock_guard<std::mutex> lock(visualization_mutex_);
+    if (!config_.pipeline_.visualize) return;
+    if (stop_requested_) return;
+
     if (!config_.pipeline_.visualize || !cloud) {
         return;
     }
@@ -370,7 +375,7 @@ void Pipeline::updateVisualization(const small_gicp::PointCloud::Ptr &cloud) {
 
 void Pipeline::handleVisualizationControls(guik::LightViewer *viewer) {
     std::lock_guard<std::mutex> lock(viewer_mutex_);
-    if (!viewer) return;
+    if (!config_.pipeline_.visualize || stop_requested_ || !viewer) return;
 
     viewer->invoke([this] {
         ImGui::Begin("Pipeline Status");
