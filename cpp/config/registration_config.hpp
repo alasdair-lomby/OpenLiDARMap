@@ -19,13 +19,13 @@ struct RegistrationConfig {
     int max_num_points_in_cell{};
 
     RegistrationConfig()
-        : voxel_resolution(1.0),
+        : voxel_resolution(1.5),
           max_correspondence_distance(6.0),
           max_dist_sq(max_correspondence_distance * max_correspondence_distance),
-          rotation_eps(0.1 * M_PI / 180.0),
+          rotation_eps(0.05 * M_PI / 180.0),
           translation_eps(1e-3),
-          lambda(1.0),
-          max_iterations(1000),
+          lambda(2.0),
+          max_iterations(1500),
           verbose(false),
           map_overlap(50),
           removal_horizon(100),
