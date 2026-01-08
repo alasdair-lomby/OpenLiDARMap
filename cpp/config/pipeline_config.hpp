@@ -13,10 +13,11 @@ struct PipelineConfig {
 
     PipelineConfig()
         : translation_threshold(0.05),
-          rotation_threshold(0.05),
-          visualize(true),
-          save_submaps(false),
-          map_save_interval(50.0) {}
+          rotation_threshold(0.01),
+          visualize(false),
+          save_submaps(true),
+          map_save_interval(30.0) {}
 };
 
 }  // namespace openlidarmap::config
+
